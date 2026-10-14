@@ -12,7 +12,7 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://2bn-market-55ud.vercel.app'],
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://2bn-market-55ud.vercel.app','https://2bn-market.vercel.app'],
   credentials: true
 }));
 
