@@ -1,1 +1,1 @@
-export const API_URL = import.meta.env.BACKEND || 'https://twobn-market.onrender.com';
+export const API_URL = import.meta.env.VITE_API_URL || 'https://twobn-market-hn8o.onrender.com';
