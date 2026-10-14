@@ -1,12 +1,23 @@
-const mongoose = require('mongoose'); //j'importe le module de mongoose que j'ai installer dans le projet et je l'attribu a la variable mongoose.
+const mongoose = require('mongoose');
 
-const connectDB = async () => { // je crée la fonction connectDB pour me connecter a ma bdd dans mon await je me connect a ma bdd mongooe en donnant le chemin du lien qui mene a ma bdd qui contient mes identifiants de connexion
+const connectDB = async () => {
+  // Ne log jamais la valeur de l'URI, seulement si elle existe
+  console.log(
+    'Connexion à MongoDB... MONGODB_URI définie :',
+    Boolean(process.env.MONGODB_URI)
+  );
+
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('MongoDB connecté avec succès');//si connecté j'affiche ce message
-  } catch (error) { // catch sert a detecter les erreur autotomatiquement, j'aurais pu mettre un autre texte que error comme echec ou autre mais error est conform aux standard
-    console.error('Erreur de connexion MongoDB:', error.message);// ce message s'affiche si la connection echoue
-    process.exit(1); 
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 10000, // échoue après 10 s au lieu de 30 s
+    });
+    console.log('MongoDB connecté avec succès');
+  } catch (error) {
+    console.error('Erreur de connexion MongoDB:');
+    console.error('  nom     :', error.name);
+    console.error('  message :', error.message);
+    if (error.code) console.error('  code    :', error.code);
+    process.exit(1);
   }
 };
 
