@@ -2,11 +2,12 @@ import { Box, Button, TextField, MenuItem, LinearProgress, Typography } from '@m
 import { useState } from 'react';
 import { createProduct } from './services/productService';
 import SideMenu from './services/side_menu';
+import FilesEditor from './FilesEditor';
 import { API_URL } from '../src/config/api';
 import './dashboard.css';
 
 export default function CreateProduct() {
-    
+
     const [image, setImage] = useState('');
     const [imagePreview, setImagePreview] = useState('');
     const [uploadPicture, setUploadPicture] = useState(false);
@@ -17,6 +18,7 @@ export default function CreateProduct() {
     const [price, setPrice] = useState('');
     const [categories, setCategories] = useState('');
     const [fileUrl, setFileUrl] = useState('');
+    const [files, setFiles] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -56,7 +58,7 @@ export default function CreateProduct() {
             });
 
             const data = await response.json();
-            
+
             if (data.success) {
                 setImage(data.fileUrl);
                 setImagePreview(data.fileUrl);
@@ -87,7 +89,8 @@ export default function CreateProduct() {
                 price,
                 categories,
                 fileUrl,
-                content
+                content,
+                files: files.filter(f => f.name.trim())
             };
 
             await createProduct(productData);
@@ -101,7 +104,8 @@ export default function CreateProduct() {
             setCategories('');
             setFileUrl('');
             setContent('');
-            
+            setFiles([]);
+
             alert('Produit créé avec succès ! ✅');
 
         } catch (err) {
@@ -117,12 +121,11 @@ export default function CreateProduct() {
             <Box className="create_product_form">
                 <h2>Créer un nouveau produit</h2>
                 <form className='form' onSubmit={handleSubmit}>
-                    
+
                     {/* Image du produit */}
                     <Box sx={{ marginTop: 2, padding: 2, border: '1px solid #ddd', borderRadius: '4px' }}>
                         <h4 style={{ marginTop: 0 }}>Image du produit</h4>
 
-                        {/* Option 1 : coller URL depuis la bibliothèque */}
                         <TextField
                             fullWidth
                             label="Coller l'URL depuis la bibliothèque médias"
@@ -137,7 +140,6 @@ export default function CreateProduct() {
                             disabled={uploadPicture || loading}
                         />
 
-                        {/* Option 2 : uploader une nouvelle image */}
                         <input
                             accept="image/*"
                             style={{ display: 'none' }}
@@ -160,7 +162,6 @@ export default function CreateProduct() {
 
                         {uploadPicture && <LinearProgress sx={{ marginTop: 1 }} />}
 
-                        {/* Aperçu */}
                         {imagePreview && (
                             <Box sx={{ marginTop: 2 }}>
                                 <img
@@ -177,13 +178,13 @@ export default function CreateProduct() {
                             </Typography>
                         )}
                     </Box>
-                    
+
                     <TextField className='input_product' fullWidth label="Nom du produit" margin="normal" value={name} onChange={(e) => setName(e.target.value)} disabled={loading} required />
                     <TextField className='input_product' fullWidth label="Notice (courte description)" margin="normal" value={notice} onChange={(e) => setNotice(e.target.value)} disabled={loading} required />
                     <TextField className='input_product' fullWidth label="Contenu (texte complet)" margin="normal" value={content} onChange={(e) => setContent(e.target.value)} disabled={loading} required />
                     <TextField className='input_product' fullWidth label="Description complète" margin="normal" multiline rows={4} value={description} onChange={(e) => setDescription(e.target.value)} disabled={loading} required />
                     <TextField className='input_product' fullWidth label="Prix" margin="normal" value={price} onChange={(e) => setPrice(e.target.value)} disabled={loading} required />
-                    
+
                     <TextField className='input_product' fullWidth label="Catégorie" select margin="normal" value={categories} onChange={(e) => setCategories(e.target.value)} disabled={loading} required>
                         {categoriesOptions.map((option) => (
                             <MenuItem key={option.id} value={option.value}>{option.label}</MenuItem>
@@ -201,6 +202,9 @@ export default function CreateProduct() {
                         placeholder="Colle ton lien Google Drive ici"
                         helperText={fileUrl ? '✅ Lien prêt au téléchargement' : ''}
                     />
+
+                    {/* Fichiers du pack (carousel) */}
+                    <FilesEditor files={files} onChange={setFiles} disabled={loading} />
 
                     {error && <Box sx={{ color: 'red', marginTop: '10px' }}>{error}</Box>}
 

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const productSchema = new mongoose.Schema({
   image: {
     type: String,
@@ -31,9 +32,12 @@ const productSchema = new mongoose.Schema({
   fileUrl: {
     type: String,
     required: true
-
-  }
-  
+  },
+  files: [{
+    name: { type: String, required: true },
+    description: { type: String, default: '' },
+    image: { type: String, default: '' }   // vide = placeholder
+  }]
 }, {
   timestamps: true
 });

@@ -2,6 +2,7 @@ import { Box, Button, TextField, Card, CardContent, LinearProgress, Typography }
 import { useState, useEffect } from 'react';
 import { getAllProducts, updateProduct, uploadFile } from './services/getAllProducts';
 import SideMenu from './services/side_menu';
+import FilesEditor from './FilesEditor';
 import { API_URL } from '../src/config/api';
 import './dashboard.css';
 
@@ -15,7 +16,7 @@ export default function EditProduct() {
         image: '',
         notice: '',
         categories: '',
-        fileUrl: ''
+        files: []
     });
     const [loading, setLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
@@ -41,7 +42,7 @@ export default function EditProduct() {
             image: product.image,
             notice: product.notice,
             categories: product.categories,
-            fileUrl: product.fileUrl || ''
+            files: product.files || []
         });
         setSelectedFile(null);
         setSelectedImage(null);
@@ -91,7 +92,11 @@ export default function EditProduct() {
         setLoading(true);
 
         try {
-            let updatedData = { ...formData };
+            // fileUrl n'est envoyé que si un nouveau fichier est uploadé
+            let updatedData = {
+                ...formData,
+                files: formData.files.filter(f => f.name.trim())
+            };
 
             if (selectedFile) {
                 const uploadResult = await uploadFile(selectedFile, formData.categories);
@@ -129,7 +134,6 @@ export default function EditProduct() {
                                         <Box sx={{ marginBottom: 2, padding: 2, border: '1px solid #ddd', borderRadius: '4px' }}>
                                             <h4 style={{ marginTop: 0 }}>Image du produit</h4>
 
-                                            {/* Option 1 : coller URL depuis la bibliothèque */}
                                             <TextField
                                                 fullWidth
                                                 label="Coller l'URL depuis la bibliothèque médias"
@@ -144,7 +148,6 @@ export default function EditProduct() {
                                                 disabled={uploadingImage || loading}
                                             />
 
-                                            {/* Option 2 : uploader une nouvelle image */}
                                             <input
                                                 accept="image/*"
                                                 style={{ display: 'none' }}
@@ -172,7 +175,6 @@ export default function EditProduct() {
                                                 </Typography>
                                             )}
 
-                                            {/* Aperçu */}
                                             {imagePreview && (
                                                 <Box sx={{ marginTop: 2 }}>
                                                     <img
@@ -190,14 +192,14 @@ export default function EditProduct() {
                                         <TextField fullWidth label="Notice" value={formData.notice} onChange={(e) => setFormData({ ...formData, notice: e.target.value })} margin="normal" disabled={loading} />
                                         <TextField fullWidth label="Catégorie" value={formData.categories} onChange={(e) => setFormData({ ...formData, categories: e.target.value })} margin="normal" disabled={loading} />
 
-                                        {/* Fichier téléchargeable */}
+                                        {/* Fichier téléchargeable (payant) */}
                                         <Box sx={{ marginTop: 2, marginBottom: 2, padding: 2, border: '1px solid #ddd', borderRadius: '4px' }}>
                                             <h4 style={{ marginTop: 0 }}>Fichier téléchargeable</h4>
-                                            {formData.fileUrl && (
-                                                <Box sx={{ marginBottom: 2, color: 'green', fontSize: '0.85rem' }}>
-                                                    ✅ Fichier actuel : {formData.fileUrl}
-                                                </Box>
-                                            )}
+                                            <Box sx={{ marginBottom: 2, color: product.hasFile ? 'green' : 'red', fontSize: '0.85rem' }}>
+                                                {product.hasFile
+                                                    ? '✅ Un fichier est enregistré (laisse vide pour le conserver)'
+                                                    : '❌ Aucun fichier'}
+                                            </Box>
                                             <input type="file" onChange={handleFileChange} disabled={loading} style={{ marginTop: '10px' }} />
                                             {selectedFile && (
                                                 <Box sx={{ marginTop: 1, color: 'blue', fontSize: '0.85rem' }}>
@@ -205,6 +207,13 @@ export default function EditProduct() {
                                                 </Box>
                                             )}
                                         </Box>
+
+                                        {/* Fichiers du pack (carousel) */}
+                                        <FilesEditor
+                                            files={formData.files}
+                                            onChange={(files) => setFormData(prev => ({ ...prev, files }))}
+                                            disabled={loading}
+                                        />
 
                                         <Box sx={{ marginTop: 2 }}>
                                             <Button type="submit" variant="contained" disabled={loading || uploadingImage}>
@@ -224,8 +233,9 @@ export default function EditProduct() {
                                         <p><strong>Prix:</strong> {product.price}</p>
                                         <p><strong>Description:</strong> {product.description}</p>
                                         <p><strong>Catégorie:</strong> {product.categories}</p>
-                                        {product.fileUrl
-                                            ? <p><strong>Fichier:</strong> ✅ {product.fileUrl}</p>
+                                        <p><strong>Fichiers du pack:</strong> {product.files?.length || 0}</p>
+                                        {product.hasFile
+                                            ? <p><strong>Fichier:</strong> ✅ Enregistré</p>
                                             : <p><strong>Fichier:</strong> ❌ Aucun</p>
                                         }
                                         <Button variant="outlined" onClick={() => handleEdit(product)}>Modifier</Button>
