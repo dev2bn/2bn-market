@@ -96,17 +96,13 @@ export default function Product_profil() {
                 padding: { xs: '20px', md: '30px 80px' }
             }}>
 
-            {/* Gauche : carousel des fichiers (ou image seule si pas de files) */}
+            {/* Gauche : image du produit + miniatures */}
             <Box className="profil_product_container_img" sx={{ color: 'black', flex: 1 }}>
-                {productProfil.files?.length > 0 ? (
-                    <FileCarousel files={productProfil.files} getImagePath={getImagePath} />
-                ) : (
-                    <div className="profil_product_container">
-                        <div className='product_banner'>
-                            <img src={getImagePath(productProfil.image)} alt={productProfil.name} width='100%' />
-                        </div>
-                    </div>
-                )}
+                <FileCarousel
+                    images={[productProfil.image, ...(productProfil.files || []).map(f => f.image)]}
+                    alt={productProfil.name}
+                    getImagePath={getImagePath}
+                />
             </Box>
 
             {/* Droite : description du pack, prix, paiement */}
