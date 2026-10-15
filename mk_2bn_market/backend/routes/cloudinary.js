@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { v2: cloudinary } = require('cloudinary');
-const Product = require('../models/Product');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -41,7 +40,7 @@ router.get('/images', async (req, res) => {
     try {
         const folder = cleanName(req.query.folder);
         const expression = folder
-            ? `resource_type:image AND folder="${folder}"`
+            ? `resource_type:image AND asset_folder="${folder}"`
             : 'resource_type:image';
 
         const result = await cloudinary.search
@@ -62,8 +61,7 @@ router.get('/images', async (req, res) => {
     }
 });
 
-// POST - déplacer des images vers un dossier ('' = racine)
-// L'URL change après déplacement : on met à jour les produits qui l'utilisent.
+// POST - déplacer des images vers un dossier ('' = racine). L'URL ne change pas.
 router.post('/move', express.json(), async (req, res) => {
     const folder = cleanName(req.body.folder);
     const ids = Array.isArray(req.body.public_ids) ? req.body.public_ids : [];
@@ -74,22 +72,7 @@ router.post('/move', express.json(), async (req, res) => {
 
     for (const publicId of ids) {
         try {
-            const baseName = String(publicId).split('/').pop();
-            const target = folder ? `${folder}/${baseName}` : baseName;
-            if (target === publicId) { moved++; continue; }
-
-            const before = await cloudinary.api.resource(publicId);
-            const result = await cloudinary.uploader.rename(publicId, target, { invalidate: true });
-
-            const oldUrl = before.secure_url;
-            const newUrl = result.secure_url;
-
-            await Product.updateMany({ image: oldUrl }, { $set: { image: newUrl } });
-            await Product.updateMany(
-                { 'files.image': oldUrl },
-                { $set: { 'files.$[f].image': newUrl } },
-                { arrayFilters: [{ 'f.image': oldUrl }] }
-            );
+            await cloudinary.api.update(publicId, { asset_folder: folder });
             moved++;
         } catch (err) {
             console.error('Erreur move:', publicId, err.message || err);

@@ -34,7 +34,7 @@ router.post('/', async (req, res) => {
         const options = isImage
             ? { resource_type: 'image', transformation: [{ width: 1536, height: 1024, crop: 'limit' }] }
             : { resource_type: 'auto' };
-        if (folder) options.folder = folder;
+        if (folder) options.asset_folder = folder;
 
         const results = await Promise.all(files.map((f) => uploadOne(f, options)));
         const fileUrls = results.map((r) => r.secure_url);
