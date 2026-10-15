@@ -162,7 +162,7 @@ body {
     font-family: 'poppins-regular';
     font-size: 12px;
     display: flex !important;
-    justify-content: start !important;
+    justify-content: space-between !important;
     width: 100%;
     flex-wrap: wrap;
 }

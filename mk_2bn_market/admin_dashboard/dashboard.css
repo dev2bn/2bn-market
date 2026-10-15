@@ -172,7 +172,7 @@
 
 .admin_edit_product_container{
     color: var(--title);
-    padding: 20px 60px 0 400px;
+    padding: 20px 60px 0 300px;
     box-sizing: border-box;
     height: 100vh;
     overflow: hidden;
@@ -187,7 +187,7 @@
 
 .delete_product_container{
     flex: 1;
-    padding: 20px 60px 0 400px;
+    padding: 20px 60px 0 300px;
     box-sizing: border-box;
     height: 100vh;
     overflow: hidden;
