@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v2: cloudinary } = require('cloudinary');
+const Product = require('../models/Product');
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -59,6 +60,44 @@ router.get('/images', async (req, res) => {
         console.error('Erreur images:', err);
         res.status(500).json({ error: 'Erreur Cloudinary' });
     }
+});
+
+// POST - déplacer des images vers un dossier ('' = racine)
+// L'URL change après déplacement : on met à jour les produits qui l'utilisent.
+router.post('/move', express.json(), async (req, res) => {
+    const folder = cleanName(req.body.folder);
+    const ids = Array.isArray(req.body.public_ids) ? req.body.public_ids : [];
+    if (ids.length === 0) return res.status(400).json({ error: 'Aucune image sélectionnée' });
+
+    let moved = 0;
+    const failed = [];
+
+    for (const publicId of ids) {
+        try {
+            const baseName = String(publicId).split('/').pop();
+            const target = folder ? `${folder}/${baseName}` : baseName;
+            if (target === publicId) { moved++; continue; }
+
+            const before = await cloudinary.api.resource(publicId);
+            const result = await cloudinary.uploader.rename(publicId, target, { invalidate: true });
+
+            const oldUrl = before.secure_url;
+            const newUrl = result.secure_url;
+
+            await Product.updateMany({ image: oldUrl }, { $set: { image: newUrl } });
+            await Product.updateMany(
+                { 'files.image': oldUrl },
+                { $set: { 'files.$[f].image': newUrl } },
+                { arrayFilters: [{ 'f.image': oldUrl }] }
+            );
+            moved++;
+        } catch (err) {
+            console.error('Erreur move:', publicId, err.message || err);
+            failed.push(publicId);
+        }
+    }
+
+    res.json({ moved, failed });
 });
 
 module.exports = router;
