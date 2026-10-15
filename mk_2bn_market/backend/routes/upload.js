@@ -11,30 +11,35 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const cleanName = (n = '') => String(n).replace(/[^\p{L}\p{N} _-]/gu, '').trim().slice(0, 60);
+
+const uploadOne = (file, options) =>
+    new Promise((resolve, reject) => {
+        cloudinary.uploader
+            .upload_stream(options, (error, result) => (error ? reject(error) : resolve(result)))
+            .end(file.data);
+    });
+
 router.post('/', async (req, res) => {
     try {
         if (!req.files || !req.files.file) {
             return res.status(400).json({ error: 'Aucun fichier fourni' });
         }
 
-        const file = req.files.file;
+        // Un seul fichier = objet, plusieurs = tableau
+        const files = Array.isArray(req.files.file) ? req.files.file : [req.files.file];
+        const isImage = req.body.category === 'Images';
+        const folder = cleanName(req.body.folder);
 
-        // Upload direct sur Cloudinary via buffer
-        const result = await new Promise((resolve, reject) => {
-            cloudinary.uploader.upload_stream(
-                { resource_type: 'image' },
-                (error, result) => {
-                    if (error) reject(error);
-                    else resolve(result);
-                }
-            ).end(file.data);
-        });
+        const options = isImage
+            ? { resource_type: 'image', transformation: [{ width: 1536, height: 1024, crop: 'limit' }] }
+            : { resource_type: 'auto' };
+        if (folder) options.folder = folder;
 
-        res.json({
-            success: true,
-            fileUrl: result.secure_url,
-        });
+        const results = await Promise.all(files.map((f) => uploadOne(f, options)));
+        const fileUrls = results.map((r) => r.secure_url);
 
+        res.json({ success: true, fileUrl: fileUrls[0], fileUrls });
     } catch (error) {
         console.error('❌ Erreur upload:', error);
         res.status(500).json({ error: error.message });
