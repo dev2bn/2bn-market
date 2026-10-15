@@ -88,78 +88,87 @@ export default function Product_profil() {
     };
 
     return (
-        <Box className="product_profil_container"
-            sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', md: 'row' },
-                gap: '40px',
-                padding: { xs: '20px', md: '30px 80px' }
-            }}>
+        <>
+            <Box className="product_profil_container"
+                sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    gap: '40px',
+                    padding: { xs: '20px', md: '30px 80px' }
+                }}>
 
-            {/* Gauche : image du produit + miniatures */}
-            <Box className="profil_product_container_img" sx={{ color: 'black', flex: 1 }}>
-                <FileCarousel
-                    images={[productProfil.image, ...(productProfil.files || []).map(f => f.image)]}
-                    alt={productProfil.name}
-                    getImagePath={getImagePath}
-                />
-            </Box>
+                {/* Gauche : image du produit + miniatures */}
+                <Box className="profil_product_container_img" sx={{ color: 'black', flex: 1 }}>
+                    <FileCarousel
+                        images={[productProfil.image, ...(productProfil.files || []).map(f => f.image)]}
+                        alt={productProfil.name}
+                        getImagePath={getImagePath}
+                    />
+                </Box>
 
-            {/* Droite : description du pack, prix, paiement */}
-            <Box sx={{ flex: 1 }}>
-                <div className="profil_product_container_details">
-                    {showSuccessMessage && (
-                        <Alert severity="success" sx={{ marginBottom: 3 }}>
-                            Paiement réussi ! {hasPaid ? 'Vous pouvez maintenant télécharger le fichier.' : 'Vérification en cours...'}
-                        </Alert>
-                    )}
+                {/* Droite : nom, description, prix, paiement */}
+                <Box sx={{ flex: 1 }}>
+                    <div className="profil_product_container_details">
+                        {showSuccessMessage && (
+                            <Alert severity="success" sx={{ marginBottom: 3 }}>
+                                Paiement réussi ! {hasPaid ? 'Vous pouvez maintenant télécharger le fichier.' : 'Vérification en cours...'}
+                            </Alert>
+                        )}
 
-                    <div className='product_title'><h2>{productProfil.name}</h2></div>
-                    <div className='product_description'>{productProfil.description}</div><br />
-                    <div className='product_content'>{productProfil.content}</div>
-                    <div className='product_price'>{productProfil.price} XAF</div>
+                        <div className='product_title'><h2>{productProfil.name}</h2></div>
+                        <div className='product_description'>{productProfil.description}</div>
+                        <div className='product_price'>{productProfil.price} XAF</div>
 
-                    {!hasPaid && (
-                        !showPaymentForm ? (
-                            <Button className="basket_button" variant="contained" fullWidth
-                                onClick={() => setShowPaymentForm(true)} sx={{ marginTop: 3, padding: '12px' }}>
-                                Effectuer le paiement
-                            </Button>
-                        ) : (
-                            <Box>
-                                <PaymentForm product={productProfil} />
-                                <Button fullWidth onClick={() => setShowPaymentForm(false)} sx={{ marginTop: 2 }}>
-                                    Annuler
+                        {!hasPaid && (
+                            !showPaymentForm ? (
+                                <Button className="basket_button" variant="contained" fullWidth
+                                    onClick={() => setShowPaymentForm(true)} sx={{ marginTop: 3, padding: '12px' }}>
+                                    Effectuer le paiement
                                 </Button>
+                            ) : (
+                                <Box>
+                                    <PaymentForm product={productProfil} />
+                                    <Button fullWidth onClick={() => setShowPaymentForm(false)} sx={{ marginTop: 2 }}>
+                                        Annuler
+                                    </Button>
+                                </Box>
+                            )
+                        )}
+
+                        {hasPaid && productProfil.hasFile && (
+                            <Button
+                                className="basket_button_validate"
+                                variant="contained"
+                                color="success"
+                                onClick={handleDownload}
+                                sx={{ marginTop: 3 }}
+                            >
+                                Télécharger le fichier
+                            </Button>
+                        )}
+
+                        {hasPaid && !productProfil.hasFile && (
+                            <Box sx={{ marginTop: 3, color: 'orange' }}>
+                                Paiement confirmé mais aucun fichier disponible
                             </Box>
-                        )
-                    )}
+                        )}
 
-                    {hasPaid && productProfil.hasFile && (
-                        <Button
-                            className="basket_button_validate"
-                            variant="contained"
-                            color="success"
-                            onClick={handleDownload}
-                            sx={{ marginTop: 3 }}
-                        >
-                            Télécharger le fichier
-                        </Button>
-                    )}
-
-                    {hasPaid && !productProfil.hasFile && (
-                        <Box sx={{ marginTop: 3, color: 'orange' }}>
-                            Paiement confirmé mais aucun fichier disponible
-                        </Box>
-                    )}
-
-                    {showSuccessMessage && !hasPaid && (
-                        <Box sx={{ marginTop: 3, color: 'blue' }}>
-                            Vérification du paiement en cours...
-                        </Box>
-                    )}
-                </div>
+                        {showSuccessMessage && !hasPaid && (
+                            <Box sx={{ marginTop: 3, color: 'blue' }}>
+                                Vérification du paiement en cours...
+                            </Box>
+                        )}
+                    </div>
+                </Box>
             </Box>
-        </Box>
+
+            {/* Sous la galerie : description du contenu */}
+            {productProfil.content && (
+                <Box sx={{ padding: { xs: '0 20px 30px', md: '0 80px 40px' }, color: 'black' }}>
+                    <h3>Contenu du produit</h3>
+                    <Box sx={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{productProfil.content}</Box>
+                </Box>
+            )}
+        </>
     );
 }
