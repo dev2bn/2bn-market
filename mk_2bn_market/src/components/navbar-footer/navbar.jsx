@@ -1,6 +1,7 @@
 import { Box, TextField, Button } from "@mui/material";
 import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 import RemoveProduct from '../../../public/img/icons/remove.png';
 import basket from '../../../public/img/icons/panier.png';
@@ -13,6 +14,25 @@ export default function Navbar({ count, items, onRemoveItem }) {
     const [showBasket, setShowBasket] = useState(false);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+
+    // Hauteur réelle de la navbar (mesurée, plus de valeur fixe)
+    const navRef = useRef(null);
+    const [navBottom, setNavBottom] = useState(127);
+
+    useLayoutEffect(() => {
+        const update = () => {
+            if (navRef.current) {
+                setNavBottom(Math.round(navRef.current.getBoundingClientRect().bottom));
+            }
+        };
+        update();
+        window.addEventListener('resize', update);
+        window.addEventListener('scroll', update);
+        return () => {
+            window.removeEventListener('resize', update);
+            window.removeEventListener('scroll', update);
+        };
+    }, [showBasket]);
 
     // Ferme le menu si on redimensionne au-dessus de 414px
     useEffect(() => {
@@ -29,12 +49,17 @@ export default function Navbar({ count, items, onRemoveItem }) {
         return () => { document.body.style.overflow = ''; };
     }, [menuOpen]);
 
+    // Si le panier se vide, on revient à l'état initial
+    useEffect(() => {
+        if (items.length === 0) setShowPaymentForm(false);
+    }, [items.length]);
+
     const basketProduct = items.length > 0 ? {
         _id: items[0]._id,
         name: 'Paiement du panier',
         description: 'Paiement global des produits du panier',
         price: items.reduce(
-            (total, item) => total + parseInt(item.price),
+            (total, item) => total + parseInt(String(item.price).replace(/[^0-9]/g, ''), 10),
             0
         )
     } : null;
@@ -42,6 +67,56 @@ export default function Navbar({ count, items, onRemoveItem }) {
     return (
         <>
             <style>{`
+                /* ───── Panier (classes bp_*, indépendantes de custome.css) ───── */
+                .bp_panel {
+                    position: fixed;
+                    right: 0;
+                    left: auto;
+                    width: min(420px, 100vw);
+                    display: flex;
+                    flex-direction: column;
+                    box-sizing: border-box;
+                    padding: 20px;
+                    margin: 0;
+                    background: #fff;
+                    overflow: hidden;
+                    z-index: 900;
+                    box-shadow: -4px 0 24px rgba(0,0,0,.12);
+                }
+                .bp_panel h3 { margin: 0 0 12px; flex-shrink: 0; }
+                .bp_list {
+                    flex: 1 1 auto;
+                    min-height: 0;
+                    overflow-y: auto;
+                    overflow-x: hidden;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                .bp_item {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-shrink: 0;
+                    width: 100%;
+                    box-sizing: border-box;
+                    padding: 12px 16px;
+                    margin: 0;
+                    border: 1px solid #d0d7de;
+                }
+                .bp_item p { margin: 0; }
+                .bp_name { font-size: 1.05rem; margin-bottom: 6px !important; }
+                .bp_price { font-weight: 600; color: #0a2a6b; }
+                .bp_remove img { width: 24px; cursor: pointer; }
+                .bp_footer { flex-shrink: 0; max-height: 65%; overflow-y: auto; padding-top: 12px; }
+                .bp_total {
+                    background: #7ba4c0;
+                    color: #fff;
+                    padding: 12px 16px;
+                    font-size: 1.1rem;
+                    margin: 0 0 8px;
+                }
+
                 /* ───── Hamburger styles (mobile only) ───── */
                 @media (max-width: 414px) {
 
@@ -184,7 +259,7 @@ export default function Navbar({ count, items, onRemoveItem }) {
                 }
             `}</style>
 
-            <Box className="navbar_main_container">
+            <Box className="navbar_main_container" ref={navRef}>
                 <Box className="navbar_container">
                     <div className="logo_marketplace">
                         <h2>2BN Marketplace</h2>
@@ -232,70 +307,64 @@ export default function Navbar({ count, items, onRemoveItem }) {
                         </button>
                     </div>
                 </Box>
+            </Box>
 
-                {/* Panier déroulant */}
-                <Box
-                    className="basket_products"
-                    sx={{ display: showBasket ? 'block' : 'none' }}
+            {/* Panier déroulant : collé sous la navbar, seule la liste défile */}
+            {showBasket && createPortal(
+                <div
+                    className="bp_panel"
+                    style={{ top: navBottom, height: `calc(100vh - ${navBottom}px)` }}
                 >
-                    <div className="title_products_basket">
-                        <h3>Produits dans le panier</h3>
-                    </div>
+                    <h3>Produits dans le panier</h3>
 
-                    <div className="products_list">
+                    <div className="bp_list">
                         {items.length === 0 ? (
                             <p>Aucun produit dans le panier</p>
                         ) : (
                             items.map(item => (
-                                <div className="basket_items" key={item._id}>
-                                    <div className="product">
-                                        <p className="product_name">{item.name}</p>
-                                        <p className="product_price">{item.price}</p>
+                                <div className="bp_item" key={item._id}>
+                                    <div>
+                                        <p className="bp_name">{item.name}</p>
+                                        <p className="bp_price">{item.price}</p>
                                     </div>
-                                    <div className="remove_product">
+                                    <div className="bp_remove">
                                         <img
                                             src={RemoveProduct}
                                             onClick={() => onRemoveItem(item._id)}
                                             alt="remove_icon"
-                                            width="50%"
                                         />
                                     </div>
                                 </div>
                             ))
                         )}
-
-                        {items.length > 0 && basketProduct && (
-                            <div className="total_checkout_section">
-                                <div className="total_amount">
-                                    <p>Total : {basketProduct.price} Fcfa</p>
-                                </div>
-
-                                <div className="checkout_container">
-                                    {!showPaymentForm ? (
-                                        <Button
-                                            className="checkout_button"
-                                            onClick={() => setShowPaymentForm(true)}
-                                        >
-                                            Valider le paiement
-                                        </Button>
-                                    ) : (
-                                        <Box sx={{ marginTop: 2 }}>
-                                            <PaymentForm product={basketProduct} />
-                                            <Button
-                                                fullWidth
-                                                onClick={() => setShowPaymentForm(false)}
-                                                sx={{ marginTop: 2 }}
-                                            >
-                                                ← Annuler
-                                            </Button>
-                                        </Box>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
-                </Box>
-            </Box>
+
+                    {/* Toujours visible : total + paiement */}
+                    {items.length > 0 && basketProduct && (
+                        <div className="bp_footer">
+                            <p className="bp_total">Total : {basketProduct.price} Fcfa</p>
+
+                            {!showPaymentForm ? (
+                                <Button onClick={() => setShowPaymentForm(true)}>
+                                    Valider le paiement
+                                </Button>
+                            ) : (
+                                <Box sx={{ marginTop: 1 }}>
+                                    <PaymentForm product={basketProduct} />
+                                    <Button
+                                        fullWidth
+                                        onClick={() => setShowPaymentForm(false)}
+                                        sx={{ marginTop: 1 }}
+                                    >
+                                        ← Annuler
+                                    </Button>
+                                </Box>
+                            )}
+                        </div>
+                    )}
+                </div>,
+                document.body
+            )}
 
             {/* Overlay cliquable pour fermer le drawer */}
             <div

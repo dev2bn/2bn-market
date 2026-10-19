@@ -17,9 +17,9 @@ const EBILLING_BILL_URL =
 const EBILLING_PORTAL_URL =
   process.env.EBILLING_PORTAL_URL || 'https://staging.billing-easy.net';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'https://twobn-market.onrender.com';
+const BACKEND_URL = process.env.BACKEND_URL || 'https://twobn-market-hn8o.onrender.com';
 const FRONTEND_URL =
-  process.env.FRONTEND_URL || 'https://2bn-market-55ud.vercel.app';
+  process.env.FRONTEND_URL || 'https://2bn-market.vercel.app';
 
 // ---------------------------------------------------------------------------
 // Helpers

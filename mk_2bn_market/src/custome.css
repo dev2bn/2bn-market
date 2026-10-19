@@ -473,6 +473,10 @@ body {
     color: var(--section_title);
 }
 
+.profil_product_container_details h3{
+    color: black!important;
+}
+
 .notice{
     color:#077132;
     font-family: 'poppins-bold';
@@ -630,6 +634,10 @@ p.notice {
     width: 100%;
     flex-wrap: wrap;
     box-sizing: border-box;
+}
+
+.block_one_footer h3{
+    color: white!important;
 }
 
     .slider_content_one {
