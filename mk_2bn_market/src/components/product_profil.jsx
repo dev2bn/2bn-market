@@ -1,5 +1,5 @@
 import {
-    Box, Button, Alert, Dialog, DialogTitle, DialogContent, IconButton, useMediaQuery, useTheme
+    Box, Button, Alert, Dialog, DialogTitle, DialogContent, IconButton, Typography, useMediaQuery, useTheme
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -92,14 +92,20 @@ export default function Product_profil() {
         }
     };
 
+    // Le bloc "Contenu" est masqué s'il est vide ou identique à la description
+    const showContent =
+        productProfil.content &&
+        productProfil.content.trim() !== (productProfil.description || '').trim();
+
     return (
         <>
             <Box className="product_profil_container"
                 sx={{
                     display: 'flex',
                     flexDirection: { xs: 'column', md: 'row' },
-                    gap: '40px',
-                    padding: { xs: '20px', md: '30px 80px' }
+                    gap: { xs: '20px', md: '40px' },
+                    padding: { xs: '20px', md: '30px 80px' },
+                    overflowX: 'hidden'
                 }}>
 
                 {/* Gauche : image du produit + miniatures */}
@@ -128,16 +134,31 @@ export default function Product_profil() {
                             </Alert>
                         )}
 
-                        <div className='product_title'><h2>{productProfil.name}</h2></div>
-                        <div className='product_description'>{productProfil.description}</div>
-                        {/* Sous la galerie : description du contenu */}
-                        {productProfil.content && (
-                            <Box sx={{ padding: { xs: '0 20px 30px', md: '0 0px 0px' }, color: 'black' }}>
-                                <h3>Contenu du produit</h3>
-                                <Box sx={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{productProfil.content}</Box>
+                        <Typography component="h2" sx={{ fontSize: { xs: 24, md: 32 }, fontWeight: 600, lineHeight: 1.25, mb: 1.5 }}>
+                            {productProfil.name}
+                        </Typography>
+
+                        <Typography sx={{ fontSize: { xs: 15, md: 17 }, lineHeight: 1.6, color: 'text.secondary', mb: 2 }}>
+                            {productProfil.description}
+                        </Typography>
+
+                        {showContent && (
+                            <Box sx={{ mb: 3, color: 'black' }}>
+                                <Typography component="h3" sx={{ fontSize: { xs: 17, md: 20 }, fontWeight: 600, mb: 1 }}>
+                                    Contenu du produit
+                                </Typography>
+                                <Typography sx={{ fontSize: { xs: 14, md: 16 }, lineHeight: 1.6, color: 'text.secondary', whiteSpace: 'pre-line' }}>
+                                    {productProfil.content}
+                                </Typography>
                             </Box>
                         )}
-                        <div className='product_price'>{productProfil.price} XAF</div>
+
+                        <Typography sx={{
+                            textAlign: 'center', fontWeight: 700, fontSize: 18,
+                            color: '#fff', bgcolor: '#0a2a66', borderRadius: 1, py: 1.2, mb: 2
+                        }}>
+                            {productProfil.price} XAF
+                        </Typography>
 
                         {!hasPaid && (
                             <Button className="basket_button" variant="contained" fullWidth
