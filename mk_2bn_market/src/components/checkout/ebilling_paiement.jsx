@@ -2,55 +2,51 @@ import { Box, TextField, Button } from "@mui/material";
 import { useState } from 'react';
 import { API_URL } from '../../config/api';
 
-export default function EbillingPaiement({ product }) { // ← Reçoit le produit en props
+export default function EbillingPaiement({ product }) {
     const [payer_msisdn, setPayer_msisdn] = useState('');
     const [payer_email, setPayer_email] = useState('');
     const [loading, setLoading] = useState(false);
 
-const handleCheckout = async () => {
-    setLoading(true);
-    
-    try {
-        const cleanPrice = parseInt(product.price.toString().replace(/[^0-9]/g, ''));
-        
-        // ✅ Stocke l'email ET le productId
-        localStorage.setItem('userEmail', payer_email);
-        localStorage.setItem('lastProductId', product._id); // ← AJOUTE
-        
-        const response = await fetch(`${API_URL}/api/payment/create-ebill`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                payer_msisdn: payer_msisdn,
-                payer_email: payer_email,
-                amount: cleanPrice,
-                productId: product._id,
-                productName: product.name
-            })
-        });
+    const handleCheckout = async () => {
+        setLoading(true);
 
-        const data = await response.json();
-        
-        if (data.success && data.payment_url) {
-            console.log('✅ Redirection vers Ebilling...');
-            window.location.href = data.payment_url;
-        } else {
-            throw new Error(data.error || 'Erreur lors de la création du paiement');
+        try {
+            const cleanPrice = parseInt(product.price.toString().replace(/[^0-9]/g, ''));
+
+            localStorage.setItem('userEmail', payer_email);
+            localStorage.setItem('lastProductId', product._id);
+
+            const response = await fetch(`${API_URL}/api/payment/create-ebill`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    payer_msisdn: payer_msisdn,
+                    payer_email: payer_email,
+                    amount: cleanPrice,
+                    productId: product._id,
+                    productName: product.name
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.payment_url) {
+                // Redirection vers le portail Ebilling (lien externe)
+                window.location.href = data.payment_url;
+            } else {
+                throw new Error(data.error || 'Erreur lors de la création du paiement');
+            }
+
+        } catch (error) {
+            console.error('❌ Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+            setLoading(false);
         }
-        
-    } catch (error) {
-        console.error('❌ Erreur:', error);
-        alert('❌ Erreur : ' + error.message);
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
     return (
-        <Box sx={{ marginTop: 3, padding: 3, backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-            <h3 style={{ marginBottom: '20px' }}>Informations de paiement</h3>
-            
-            <TextField 
+        <Box sx={{ padding: 1 }}>
+            <TextField
                 fullWidth
                 label="Numéro de téléphone"
                 type="number"
@@ -60,8 +56,8 @@ const handleCheckout = async () => {
                 placeholder="241062000000"
                 required
             />
-            
-            <TextField 
+
+            <TextField
                 fullWidth
                 label="Email"
                 type="email"
@@ -71,15 +67,15 @@ const handleCheckout = async () => {
                 placeholder="email@example.com"
                 required
             />
-            
-            <Button 
+
+            <Button
                 variant="contained"
                 fullWidth
                 onClick={handleCheckout}
                 disabled={loading || !payer_msisdn || !payer_email}
                 sx={{ marginTop: 2, padding: '12px' }}
             >
-                {loading ? "Traitement en cours..." : `💳 Payer ${product.price} XAF`}
+                {loading ? "Redirection vers Ebilling..." : `💳 Payer ${product.price} XAF`}
             </Button>
 
             <Box sx={{ marginTop: 2, fontSize: '0.9rem', color: '#666' }}>

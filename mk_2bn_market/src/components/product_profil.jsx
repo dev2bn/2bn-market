@@ -1,4 +1,6 @@
-import { Box, Button, Alert } from '@mui/material';
+import {
+    Box, Button, Alert, Dialog, DialogTitle, DialogContent, IconButton, useMediaQuery, useTheme
+} from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getProductById } from './services/productServices';
@@ -11,9 +13,12 @@ export default function Product_profil() {
 
     const { id } = useParams();
     const [searchParams] = useSearchParams();
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
     const [productProfil, setProductProfil] = useState(null);
     const [profilLoading, setProfilLoading] = useState(true);
-    const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [paymentOpen, setPaymentOpen] = useState(false); // modal de paiement
     const [hasPaid, setHasPaid] = useState(false);
     const [userEmail, setUserEmail] = useState('');
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
@@ -98,7 +103,15 @@ export default function Product_profil() {
                 }}>
 
                 {/* Gauche : image du produit + miniatures */}
-                <Box className="profil_product_container_img" sx={{ color: 'black', flex: 1 }}>
+                <Box className="profil_product_container_img" sx={{
+                    color: 'black',
+                    flex: 1,
+                    // Mobile : annule le padding de 20px du conteneur => image pleine largeur
+                    margin: { xs: '-20px -20px 0', md: 0 },
+                    width: { xs: 'calc(100% + 40px)', md: 'auto' },
+                    maxWidth: { xs: 'none', md: '100%' },
+                    '& img': { maxWidth: '100%' }
+                }}>
                     <FileCarousel
                         images={[productProfil.image, ...(productProfil.files || []).map(f => f.image)]}
                         alt={productProfil.name}
@@ -117,22 +130,20 @@ export default function Product_profil() {
 
                         <div className='product_title'><h2>{productProfil.name}</h2></div>
                         <div className='product_description'>{productProfil.description}</div>
+                        {/* Sous la galerie : description du contenu */}
+                        {productProfil.content && (
+                            <Box sx={{ padding: { xs: '0 20px 30px', md: '0 0px 0px' }, color: 'black' }}>
+                                <h3>Contenu du produit</h3>
+                                <Box sx={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{productProfil.content}</Box>
+                            </Box>
+                        )}
                         <div className='product_price'>{productProfil.price} XAF</div>
 
                         {!hasPaid && (
-                            !showPaymentForm ? (
-                                <Button className="basket_button" variant="contained" fullWidth
-                                    onClick={() => setShowPaymentForm(true)} sx={{ marginTop: 3, padding: '12px' }}>
-                                    Effectuer le paiement
-                                </Button>
-                            ) : (
-                                <Box>
-                                    <PaymentForm product={productProfil} />
-                                    <Button fullWidth onClick={() => setShowPaymentForm(false)} sx={{ marginTop: 2 }}>
-                                        Annuler
-                                    </Button>
-                                </Box>
-                            )
+                            <Button className="basket_button" variant="contained" fullWidth
+                                onClick={() => setPaymentOpen(true)} sx={{ marginTop: 3, padding: '12px' }}>
+                                Effectuer le paiement
+                            </Button>
                         )}
 
                         {hasPaid && productProfil.hasFile && (
@@ -162,13 +173,27 @@ export default function Product_profil() {
                 </Box>
             </Box>
 
-            {/* Sous la galerie : description du contenu */}
-            {productProfil.content && (
-                <Box sx={{ padding: { xs: '0 20px 30px', md: '0 80px 40px' }, color: 'black' }}>
-                    <h3>Contenu du produit</h3>
-                    <Box sx={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>{productProfil.content}</Box>
-                </Box>
-            )}
+            {/* Modal de paiement : formulaire (puis redirection vers Ebilling) */}
+            <Dialog
+                open={paymentOpen}
+                onClose={() => setPaymentOpen(false)}
+                fullWidth
+                maxWidth="sm"
+                fullScreen={fullScreen}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Paiement
+                    <IconButton aria-label="Fermer" onClick={() => setPaymentOpen(false)}>
+                        ✕
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
+                    {/* Remonté à chaque ouverture => le formulaire repart de zéro */}
+                    {paymentOpen && (
+                        <PaymentForm product={productProfil} />
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
