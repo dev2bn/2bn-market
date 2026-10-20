@@ -134,7 +134,7 @@ export default function Product_profil() {
                             </Alert>
                         )}
 
-                        <Typography component="h2" sx={{ fontSize: { xs: 24, md: 32 }, fontWeight: 600, lineHeight: 1.25, mb: 1.5 }}>
+                        <Typography component="h2" sx={{ fontSize: { xs: 24, md: 32 }, color: 'text.primary', fontWeight: 600, lineHeight: 1.25, mb: 1.5 }}>
                             {productProfil.name}
                         </Typography>
 
@@ -154,8 +154,8 @@ export default function Product_profil() {
                         )}
 
                         <Typography sx={{
-                            textAlign: 'center', fontWeight: 700, fontSize: 18,
-                            color: '#fff', bgcolor: '#0a2a66', borderRadius: 1, py: 1.2, mb: 2
+                            textAlign: 'center', fontWeight: 700, fontSize: 17,
+                            color: '#fff', bgcolor: '#0a2a669d', borderRadius: 1, py: 1.2, mb: 2
                         }}>
                             {productProfil.price} XAF
                         </Typography>
